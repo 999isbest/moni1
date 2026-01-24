@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络表达模拟体验-创意表达</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+            background: #f8f9fa radial-gradient(circle at 50% 50%, rgba(255,240,200,0.8) 0%, #fff 100%);
+            overflow: hidden;
+            /* 核心修改1：移除默认隐藏鼠标的样式，让鼠标始终显示 */
+            /* cursor: none; 注释掉这行 */
+            transition: background-color 0.5s ease, box-shadow 0.5s ease, filter 0.5s ease;
+            position: relative;
+        }
+
+        /* 游戏胜利后显示鼠标的body样式（保留但调整逻辑） */
+        body.game-ended {
+            cursor: default !important;
+        }
+
+        /* 游戏运行中隐藏鼠标（新增样式） */
+        body.game-running {
+            cursor: none !important;
+        }
+
+        /* 动态光斑背景 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.45' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: -1;
+            animation: noiseMove 8s infinite linear;
+        }
+
+        @keyframes noiseMove {
+            0% { transform: translate(0, 0); }
+            50% { transform: translate(-5px, -5px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        /* 喜悦呼吸效果 */
+        @keyframes joyBreath {
+            0% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+            100% { filter: brightness(1); }
+        }
+
+        /* 欢笑值容器 - 居中上方 */
+        .joy-container {
+            position: fixed;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 3px solid #ffcc00;
+            border-radius: 20px;
+            overflow: hidden;
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
+            backdrop-filter: blur(10px);
+            transition: transform 0.1s ease;
+        }
+
+        /* 欢笑值进度 */
+        .joy-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #FFD700, #FFA500);
+            transition: width 0.3s ease, background 0.3s ease;
+            position: relative;
+        }
+
+        .joy-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to right,
+                rgba(255,255,255,0.2) 0%,
+                rgba(255,255,255,0.4) 50%,
+                rgba(255,255,255,0.2) 100%
+            );
+            animation: shimmer 2s infinite linear;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* 欢笑值文字提示 */
+        .joy-text {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ff8c00;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 101;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+            transition: transform 0.1s ease;
+        }
+
+        /* 游戏画布 */
+        #gameCanvas {
+            display: block;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: filter 0.2s ease, transform 0.1s ease;
+        }
+
+        /* 游戏胜利弹窗 */
+        .game-win {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.98);
+            color: #ff8c00;
+            padding: 50px;
+            border-radius: 15px;
+            text-align: center;
+            z-index: 200;
+            display: none;
+            border: 2px solid #ffcc00;
+            box-shadow: 0 0 30px rgba(255, 204, 0, 0.5);
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        /* 游戏开始弹窗 */
+        .game-start {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.98);
+            color: #ff8c00;
+            padding: 50px;
+            border-radius: 15px;
+            text-align: center;
+            z-index: 300; /* 层级高于其他元素 */
+            border: 2px solid #ffcc00;
+            box-shadow: 0 0 30px rgba(255, 204, 0, 0.5);
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .game-start h2 {
+            color: #ff8c00;
+            margin-bottom: 10px;
+            font-size: 36px;
+            text-shadow: 0 0 10px rgba(255, 140, 0, 0.5);
+        }
+
+        .game-start .sub-title {
+            color: #ff6666;
+            font-size: 24px;
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+
+        .game-win h2, .game-start h3 {
+            color: #ff8c00;
+            margin-bottom: 25px;
+            font-size: 36px;
+            text-shadow: 0 0 10px rgba(255, 140, 0, 0.5);
+        }
+
+        .game-win p, .game-start p {
+            font-size: 20px;
+            margin-bottom: 35px;
+            line-height: 1.8;
+            color: #333;
+        }
+
+        .game-win button, .game-start button {
+            padding: 12px 40px;
+            font-size: 20px;
+            background: linear-gradient(90deg, #FFD700, #FFA500);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .game-win button:hover, .game-start button:hover {
+            background: linear-gradient(90deg, #FFA500, #FF8C00);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+        }
+
+        .game-win button:focus, .game-start button:focus {
+            outline: 3px solid #FFD700;
+            outline-offset: 2px;
+        }
+
+        /* 游戏说明 */
+        .instructions {
+            position: fixed;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ff8c00;
+            font-size: 15px;
+            text-align: center;
+            z-index: 100;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+            transition: transform 0.1s ease;
+            text-shadow: 0 0 3px #fff;
+        }
+
+        /* 评论卡片样式 */
+        .comment-card {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 550px;
+            height: 110px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.2);
+            z-index: 100;
+            border: 2px solid #ffdd99;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s ease;
+        }
+
+        /* 评论头像 */
+        .comment-avatar {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        /* 头像脉冲动画 */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* 评论内容区域 */
+        .comment-content {
+            flex: 1;
+            color: #333;
+        }
+
+        .comment-author {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .comment-text {
+            font-size: 19px;
+            line-height: 1.5;
+            color: #555;
+            text-shadow: 0 1px 3px rgba(255, 255, 255, 0.5);
+        }
+
+        /* 闪烁效果类 */
+        .flash-effect {
+            filter: brightness(1.3) contrast(1.2);
+        }
+
+        /* 粒子效果样式 */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleFade 1s ease forwards;
+        }
+
+        @keyframes particleFade {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 游戏开始弹窗（核心修改2：简化说明文字） -->
+    <div class="game-start" id="gameStart">
+        <h2>创意表达</h2>
+        <div class="sub-title">批判对象：“事”</div>
+        <p>
+            收集绿色暖心言弹<br>
+            躲避红色负面言弹<br>
+            欢笑值满100即模拟成功
+        </p>
+        <button onclick="startGame()">开始模拟</button>
+    </div>
+
+    <!-- 欢笑值区域 -->
+    <div class="joy-container" id="joyContainer">
+        <div class="joy-bar" id="joyBar"></div>
+    </div>
+    <div class="joy-text" id="joyText">欢笑值: 0</div>
+
+    <!-- 游戏画布 -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- 游戏胜利弹窗 -->
+    <div class="game-win" id="gameWin">
+        <h2>模拟结束</h2>
+        <p>在温暖的网络氛围中，你收获了满满的快乐<br>即使有不同的观点，也能通过创意表达愉快讨论！</p>
+        <button onclick="confirmGameWin()">确认</button>
+    </div>
+
+    <!-- 游戏说明 -->
+    <div class="instructions" id="instructions">
+        灰色=路人(无效果) | 红色=负面言论(减欢笑值) | 绿色=暖心话语(加欢笑值)<br>
+        收集绿色言弹，躲避红色言弹，积累欢笑值到100即可胜利
+    </div>
+
+    <!-- 评论卡片 -->
+    <div class="comment-card" id="commentCard">
+        <div class="comment-avatar" id="commentAvatar">😐</div>
+        <div class="comment-content">
+            <div class="comment-author" id="commentAuthor">路人</div>
+            <div class="comment-text" id="commentText">等待互动...</div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 音频资源初始化 ==========
+        const audio = {
+            hitRed: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-sad-trombone-471.mp3'),
+            hitGreen: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3'),
+            hitGray: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3'),
+            gameWin: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3'),
+            bgm: new Audio('https://assets.mixkit.co/music/preview/mixkit-happy-ukulele-1184.mp3')
+        };
+
+        // 全局打字机定时器，用于中断重复评论
+        let typingTimer = null;
+
+        // 初始化音频设置
+        function initAudio() {
+            audio.bgm.loop = true;
+            audio.bgm.volume = 0.3;
+            audio.hitRed.volume = 0.4;
+            audio.hitGreen.volume = 0.6;
+            audio.hitGray.volume = 0.3;
+            audio.gameWin.volume = 0.7;
+
+            // 页面交互后播放背景音乐（兼容浏览器策略）
+            document.addEventListener('click', () => {
+                audio.bgm.play().catch(e => console.log('音频自动播放受限，点击页面任意位置即可播放'));
+            }, { once: true });
+        }
+
+        // ========== DOM元素获取 ==========
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const joyBar = document.getElementById('joyBar');
+        const joyText = document.getElementById('joyText');
+        const gameWinModal = document.getElementById('gameWin');
+        const gameStartModal = document.getElementById('gameStart');
+        const commentAvatar = document.getElementById('commentAvatar');
+        const commentAuthor = document.getElementById('commentAuthor');
+        const commentText = document.getElementById('commentText');
+        const joyContainer = document.getElementById('joyContainer');
+        const instructions = document.getElementById('instructions');
+        const commentCard = document.getElementById('commentCard');
+        const body = document.body;
+
+        // ========== 游戏参数 ==========
+        let canvasWidth = window.innerWidth;
+        let canvasHeight = window.innerHeight;
+        let joy = 0; // 欢笑值，初始0，上限100
+        let mouseX = canvasWidth / 2;
+        let mouseY = canvasHeight / 2;
+        let bullets = [];
+        let gameTime = 0;
+        let gameRunning = false; // 初始为false，点击开始后设为true
+        let isJoy40Triggered = false; // 欢笑值超过40触发视觉效果
+        let shakeInterval = null;
+        let flashInterval = null;
+        let lastFrameTime = 0; // 帧率控制
+        let is18SecondsTriggered = false; // 标记18秒巨量绿弹是否已触发
+
+        // 跳转目标网址（可自行修改）
+        const TARGET_URL = "https://www.baidu.com";
+
+        // ========== 分阶段评论库 ==========
+        const commentLibrary = {
+            // 阶段1：前10秒
+            stage1: {
+                gray: ["路过~", "哈哈哈有意思", "随便看看", "今天天气不错"],
+                red: ["网络笑话来的", "就这？", "没觉得多好", "逆天发言！"],
+                green: ["哈哈哈震撼首发！", "太可爱了❤️", "老师你的参考文献在哪里？", "笑煞我也！"]
+            },
+            // 阶段2：10-30秒
+            stage2: {
+                gray: ["路过~", "哈哈哈有意思", "随便看看", "今天天气不错"],
+                red: ["网络笑话来的", "哪里好笑了？", "就这？", "装的吧"],
+                green: ["哈哈哈震撼首发！", "老师你的参考文献在哪里？", "真棒！"]
+            },
+            // 阶段3：30秒后
+            stage3: {
+                gray: ["路过~", "哈哈哈有意思", "随便看看", "今天天气不错"],
+                red: ["哪里好笑了？", "逆天发言！", "网络笑话来的", "也就那样吧"],
+                green: ["你的快乐感染到我了✨", "老师你的参考文献在哪里？", "哈哈哈震撼首发！", "太酷啦"]
+            }
+        };
+
+        // ========== 工具函数 ==========
+        // 调整画布大小
+        function resizeCanvas() {
+            canvasWidth = window.innerWidth;
+            canvasHeight = window.innerHeight;
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+        }
+
+        // 获取分阶段随机评论
+        function getRandomComment(type) {
+            let stage;
+            if (gameTime < 600) stage = 'stage1';
+            else if (gameTime < 1800) stage = 'stage2';
+            else stage = 'stage3';
+
+            const comments = commentLibrary[stage][type] || commentLibrary.stage1[type];
+            return comments[Math.floor(Math.random() * comments.length)];
+        }
+
+        // 创建碰撞粒子效果
+        function createParticles(x, y, type) {
+            const particleCount = 15;
+            const colors = {
+                gray: '#cccccc',
+                red: '#ff6666',
+                green: '#99cc00'
+            };
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                particle.style.width = `${5 + Math.random() * 10}px`;
+                particle.style.height = particle.style.width;
+                particle.style.backgroundColor = colors[type];
+                particle.style.opacity = '0.8';
+
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 2 + Math.random() * 5;
+                const dx = Math.cos(angle) * speed;
+                const dy = Math.sin(angle) * speed;
+
+                let startTime = Date.now();
+                function updateParticle() {
+                    const elapsed = Date.now() - startTime;
+                    if (elapsed > 1000) {
+                        particle.remove();
+                        return;
+                    }
+
+                    particle.style.left = `${x + dx * elapsed / 20}px`;
+                    particle.style.top = `${y + dy * elapsed / 20}px`;
+                    requestAnimationFrame(updateParticle);
+                }
+
+                document.body.appendChild(particle);
+                requestAnimationFrame(updateParticle);
+            }
+        }
+
+        // 更新背景颜色和视觉愉悦感
+        function updateBackgroundColor() {
+            // 欢笑值0 → 浅白色；欢笑值100 → 金黄色
+            const red = Math.floor(255 - (joy / 100) * 50);
+            const green = Math.floor(240 + (joy / 100) * 15);
+            const blue = Math.floor(200 + (joy / 100) * 55);
+            body.style.backgroundColor = `#${red.toString(16).padStart(2, '0')}${green.toString(16).padStart(2, '0')}${blue.toString(16).padStart(2, '0')}`;
+
+            // 欢笑值越高，金色光晕越重，愉悦感越强
+            const opacity = joy / 100;
+            body.style.boxShadow = `inset 0 0 200px rgba(255, 204, 0, ${opacity})`;
+
+            // 欢笑值超过80时添加喜悦呼吸效果
+            body.style.animation = joy > 80 ? 'joyBreath 2s infinite ease-in-out' : '';
+        }
+
+        // 画面愉悦抖动效果
+        function joyShakeScreen() {
+            const shakeAmount = 8;
+            const elements = [canvas, joyContainer, joyText, instructions, commentCard];
+
+            elements.forEach(el => {
+                const x = (Math.random() - 0.5) * shakeAmount;
+                const y = (Math.random() - 0.5) * shakeAmount;
+
+                if (el === canvas) {
+                    el.style.transform = `translate(${x}px, ${y}px)`;
+                } else if (el === joyContainer || el === commentCard) {
+                    el.style.transform = `translate(${x}px, ${y}px) translateX(-50%)`;
+                } else if (el === joyText || el === instructions) {
+                    el.style.transform = `translate(${x}px, ${y}px) translateX(-50%)`;
+                }
+            });
+
+            setTimeout(() => {
+                canvas.style.transform = 'translate(0, 0)';
+                joyContainer.style.transform = 'translateX(-50%)';
+                joyText.style.transform = 'translateX(-50%)';
+                instructions.style.transform = 'translateX(-50%)';
+                commentCard.style.transform = 'translateX(-50%)';
+            }, 100);
+        }
+
+        // 画面愉悦闪烁效果
+        function joyFlashScreen() {
+            canvas.classList.add('flash-effect');
+            setTimeout(() => {
+                canvas.classList.remove('flash-effect');
+            }, 200);
+        }
+
+        // 更新评论卡片（带打字机效果）- 接收专属评论参数
+        function updateCommentCard(type, comment) {
+            // 清除上一个打字机定时器，防止重复刷屏
+            if (typingTimer) clearInterval(typingTimer);
+
+            // 设置头像样式和表情
+            switch(type) {
+                case 'gray':
+                    commentAvatar.style.backgroundColor = '#cccccc';
+                    commentAvatar.style.boxShadow = '0 0 15px rgba(204, 204, 204, 0.5)';
+                    commentAvatar.textContent = '😐';
+                    commentAuthor.textContent = '路人';
+                    commentAuthor.style.color = '#999999';
+                    break;
+                case 'red':
+                    commentAvatar.style.backgroundColor = '#ff6666';
+                    commentAvatar.style.boxShadow = '0 0 15px rgba(255, 102, 102, 0.7)';
+                    commentAvatar.textContent = '🙁';
+                    commentAuthor.textContent = '负面言论';
+                    commentAuthor.style.color = '#ff6666';
+                    break;
+                case 'green':
+                    commentAvatar.style.backgroundColor = '#99cc00';
+                    commentAvatar.style.boxShadow = '0 0 15px rgba(153, 204, 0, 0.7)';
+                    commentAvatar.textContent = '😊';
+                    commentAuthor.textContent = '暖心话语';
+                    commentAuthor.style.color = '#99cc00';
+                    break;
+            }
+
+            // 打字机效果显示专属评论
+            commentText.textContent = '';
+            let index = 0;
+            typingTimer = setInterval(() => {
+                if (index < comment.length) {
+                    commentText.textContent += comment.charAt(index);
+                    index++;
+                } else {
+                    clearInterval(typingTimer);
+                    typingTimer = null;
+                }
+            }, 50);
+
+            // 头像脉冲动画
+            commentAvatar.style.animation = 'pulse 0.6s ease';
+            setTimeout(() => {
+                commentAvatar.style.animation = '';
+            }, 600);
+
+            // 卡片缩放反馈
+            commentCard.style.transform = 'translateX(-50%) scale(1.05)';
+            setTimeout(() => {
+                commentCard.style.transform = 'translateX(-50%) scale(1)';
+            }, 200);
+
+            // 创建粒子效果
+            createParticles(mouseX, mouseY, type);
+        }
+
+        // 批量生成绿色言弹（18秒触发）
+        function spawnMassiveGreenBullets() {
+            // 一次性生成50个绿色言弹（巨量投放）
+            const massiveCount = 50;
+            for (let i = 0; i < massiveCount; i++) {
+                // 分散生成位置，让言弹从屏幕各个方向袭来
+                const randomSide = Math.floor(Math.random() * 4);
+                let x, y;
+
+                switch(randomSide) {
+                    case 0: // 顶部
+                        x = Math.random() * canvasWidth;
+                        y = -50 - (Math.random() * 100);
+                        break;
+                    case 1: // 右侧
+                        x = canvasWidth + 50 + (Math.random() * 100);
+                        y = Math.random() * canvasHeight;
+                        break;
+                    case 2: // 底部
+                        x = Math.random() * canvasWidth;
+                        y = canvasHeight + 50 + (Math.random() * 100);
+                        break;
+                    case 3: // 左侧
+                        x = -50 - (Math.random() * 100);
+                        y = Math.random() * canvasHeight;
+                        break;
+                }
+
+                const bullet = new Bullet('green');
+                bullet.x = x;
+                bullet.y = y;
+                bullet.speed = bullet.speed * 1.2; // 18秒后绿弹速度提升20%
+                bullets.push(bullet);
+            }
+
+            // 强化视觉效果：增加愉悦抖动频率和强度
+            if (shakeInterval) clearInterval(shakeInterval);
+            shakeInterval = setInterval(() => {
+                joyShakeScreen();
+                // 额外的愉悦抖动
+                setTimeout(joyShakeScreen, 50);
+            }, 80);
+
+            // 强化闪烁效果
+            if (flashInterval) clearInterval(flashInterval);
+            flashInterval = setInterval(joyFlashScreen, 150);
+
+            // 背景变金色，强化愉悦感
+            body.style.backgroundColor = '#fff8e0';
+            body.style.boxShadow = 'inset 0 0 200px rgba(255, 204, 0, 0.8)';
+        }
+
+        // ========== 游戏核心逻辑 ==========
+        // 开始游戏（点击弹窗按钮后执行）
+        function startGame() {
+            // 隐藏开始弹窗
+            gameStartModal.style.display = 'none';
+            // 初始化游戏
+            initGame();
+        }
+
+        // 初始化游戏
+        function initGame() {
+            initAudio(); // 初始化音频
+            resizeCanvas();
+            joy = 0; // 初始欢笑值为0
+            bullets = [];
+            gameTime = 0;
+            gameRunning = true; // 标记游戏开始运行
+            isJoy40Triggered = false;
+            is18SecondsTriggered = false; // 重置18秒触发标记
+            lastFrameTime = 0;
+
+            // 核心修改3：游戏运行时添加类隐藏鼠标
+            body.classList.add('game-running');
+            body.classList.remove('game-ended');
+
+            // 清除定时器
+            if (shakeInterval) clearInterval(shakeInterval);
+            if (flashInterval) clearInterval(flashInterval);
+
+            // 重置样式
+            updateJoy();
+            updateBackgroundColor();
+            canvas.classList.remove('flash-effect');
+            canvas.style.transform = 'translate(0, 0)';
+            joyContainer.style.transform = 'translateX(-50%)';
+            joyText.style.transform = 'translateX(-50%)';
+            instructions.style.transform = 'translateX(-50%)';
+            commentCard.style.transform = 'translateX(-50%)';
+
+            gameWinModal.style.display = 'none';
+            // 初始化默认评论
+            updateCommentCard('gray', '等待互动...');
+
+            window.addEventListener('resize', resizeCanvas);
+            canvas.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+            animate();
+        }
+
+        // 更新欢笑值显示
+        function updateJoy() {
+            joyBar.style.width = `${joy}%`;
+            joyText.textContent = `欢笑值: ${joy}`;
+
+            // 欢笑值颜色渐变
+            if (joy < 40) {
+                joyBar.style.background = 'linear-gradient(90deg, #FFE485, #FFD700)';
+            } else if (joy < 70) {
+                joyBar.style.background = 'linear-gradient(90deg, #FFD700, #FFC107)';
+            } else {
+                joyBar.style.background = 'linear-gradient(90deg, #FFC107, #FF8C00)';
+            }
+
+            updateBackgroundColor();
+
+            // 欢笑值超过60时启动愉悦抖动和闪烁
+            if (joy > 60 && gameRunning) {
+                if (!shakeInterval) {
+                    shakeInterval = setInterval(joyShakeScreen, 150);
+                }
+                if (!flashInterval) {
+                    flashInterval = setInterval(joyFlashScreen, 300);
+                }
+            } else if (joy <= 60 && !is18SecondsTriggered) {
+                if (shakeInterval) {
+                    clearInterval(shakeInterval);
+                    shakeInterval = null;
+                }
+                if (flashInterval) {
+                    clearInterval(flashInterval);
+                    flashInterval = null;
+                }
+            }
+
+            // 游戏胜利逻辑（欢笑值达到100）
+            if (joy >= 100 && gameRunning) {
+                gameRunning = false;
+                // 游戏胜利后移除隐藏鼠标的类，显示鼠标
+                body.classList.remove('game-running');
+                body.classList.add('game-ended');
+                audio.gameWin.play(); // 播放游戏胜利音效
+                gameWinModal.style.display = 'block';
+                if (shakeInterval) clearInterval(shakeInterval);
+                if (flashInterval) clearInterval(flashInterval);
+            }
+        }
+
+        // 言弹类（差异化行为）
+        class Bullet {
+            constructor(type) {
+                // 初始位置
+                this.x = Math.random() * canvasWidth;
+                this.y = Math.random() > 0.5 ? -50 : canvasHeight + 50;
+
+                // 基础属性
+                this.type = type;
+                this.size = type === 'gray' ? 15 : (type === 'red' ? 20 : 18);
+
+                // 核心修改：每个言弹创建时绑定专属评论
+                this.comment = getRandomComment(type);
+
+                // 差异化速度和行为
+                switch(type) {
+                    case 'gray': // 路人：最慢，随机徘徊
+                        this.speed = 2 + Math.random() * 3;
+                        this.wander = true;
+                        this.wanderAngle = Math.random() * Math.PI * 2;
+                        this.wanderSpeed = 0.05;
+                        break;
+                    case 'red': // 负面言论：中速，直奔目标
+                        this.speed = 4 + Math.random() * 4;
+                        this.wander = false;
+                        break;
+                    case 'green': // 暖心话语：中等速度，轻微徘徊
+                        this.speed = 3 + Math.random() * 3;
+                        this.wander = true;
+                        this.wanderAngle = Math.random() * Math.PI * 2;
+                        this.wanderSpeed = 0.02;
+                        break;
+                }
+
+                // 渐变颜色
+                this.gradient = ctx.createRadialGradient(
+                    this.x, this.y, 0,
+                    this.x, this.y, this.size
+                );
+                switch(type) {
+                    case 'gray':
+                        this.gradient.addColorStop(0, '#eeeeee');
+                        this.gradient.addColorStop(1, '#cccccc');
+                        break;
+                    case 'red':
+                        this.gradient.addColorStop(0, '#ff9999');
+                        this.gradient.addColorStop(1, '#ff6666');
+                        break;
+                    case 'green':
+                        this.gradient.addColorStop(0, '#ccff99');
+                        this.gradient.addColorStop(1, '#99cc00');
+                        break;
+                }
+            }
+
+            // 更新言弹位置（带徘徊效果）
+            update() {
+                let dx = mouseX - this.x;
+                let dy = mouseY - this.y;
+
+                // 徘徊效果（路人/暖心话语）
+                if (this.wander) {
+                    this.wanderAngle += this.wanderSpeed;
+                    dx += Math.cos(this.wanderAngle) * 15;
+                    dy += Math.sin(this.wanderAngle) * 15;
+                }
+
+                const angle = Math.atan2(dy, dx);
+                this.x += Math.cos(angle) * this.speed;
+                this.y += Math.sin(angle) * this.speed;
+
+                // 更新渐变位置
+                this.gradient = ctx.createRadialGradient(
+                    this.x, this.y, 0,
+                    this.x, this.y, this.size
+                );
+                switch(this.type) {
+                    case 'gray':
+                        this.gradient.addColorStop(0, '#eeeeee');
+                        this.gradient.addColorStop(1, '#cccccc');
+                        break;
+                    case 'red':
+                        this.gradient.addColorStop(0, '#ff9999');
+                        this.gradient.addColorStop(1, '#ff6666');
+                        break;
+                    case 'green':
+                        this.gradient.addColorStop(0, '#ccff99');
+                        this.gradient.addColorStop(1, '#99cc00');
+                        break;
+                }
+
+                // 碰撞检测
+                const distance = Math.sqrt(
+                    Math.pow(mouseX - this.x, 2) +
+                    Math.pow(mouseY - this.y, 2)
+                );
+
+                if (distance < 25) {
+                    this.handleCollision();
+                    return true;
+                }
+
+                // 超出屏幕移除
+                if (this.x < -50 || this.x > canvasWidth + 50 ||
+                    this.y < -50 || this.y > canvasHeight + 50) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            // 碰撞处理（带音效）
+            handleCollision() {
+                if (!gameRunning) return;
+
+                // 播放对应音效
+                switch(this.type) {
+                    case 'red':
+                        audio.hitRed.currentTime = 0;
+                        audio.hitRed.play().catch(e => console.log('音效播放失败'));
+                        joy = Math.max(0, joy - 8); // 负面言论减少8点欢笑值
+                        break;
+                    case 'green':
+                        audio.hitGreen.currentTime = 0;
+                        audio.hitGreen.play().catch(e => console.log('音效播放失败'));
+                        joy = Math.min(100, joy + 12); // 暖心话语增加12点欢笑值
+                        break;
+                    case 'gray':
+                        audio.hitGray.currentTime = 0;
+                        audio.hitGray.play().catch(e => console.log('音效播放失败'));
+                        break;
+                }
+
+                // 传递当前言弹的专属评论
+                updateCommentCard(this.type, this.comment);
+                updateJoy();
+            }
+
+            // 绘制言弹
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.gradient;
+                ctx.fill();
+
+                // 高光效果
+                ctx.beginPath();
+                ctx.arc(this.x - this.size/3, this.y - this.size/3, this.size/4, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                ctx.fill();
+
+                // 外发光效果
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size + 2, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${this.type === 'red' ? 255 : this.type === 'green' ? 153 : 204},
+                                    ${this.type === 'red' ? 102 : this.type === 'green' ? 204 : 204},
+                                    ${this.type === 'red' ? 102 : this.type === 'green' ? 0 : 204}, 0.2)`;
+                ctx.fill();
+            }
+        }
+
+        // 生成言弹（调整概率，绿色言弹更多）
+        function spawnBullets() {
+            gameTime++;
+
+            // 18秒（1080帧）触发巨量绿色言弹（仅触发一次）
+            if (gameTime >= 1080 && !is18SecondsTriggered) {
+                is18SecondsTriggered = true;
+                spawnMassiveGreenBullets();
+            }
+
+            // 限制最大言弹数量，防止卡顿
+            if (bullets.length > 200) return;
+
+            // 基础生成规则（绿色言弹概率更高）
+            let redChance = 0.15;    // 红色：15%
+            let greenChance = 0.55;  // 绿色：55%（主要收集目标）
+            let grayChance = 0.3;    // 灰色：30%
+            let spawnRate = 5;
+
+            // 阶段难度调整
+            if (gameTime > 600) {
+                redChance = 0.25;     // 红色：25%
+                greenChance = 0.5;    // 绿色：50%
+                grayChance = 0.25;    // 灰色：25%
+                spawnRate = 7;
+            }
+
+            if (gameTime > 1800) {
+                redChance = 0.35;     // 红色：35%
+                greenChance = 0.45;   // 绿色：45%
+                grayChance = 0.2;     // 灰色：20%
+                spawnRate = 9;
+            }
+
+            // 欢笑值超过40时增加绿色言弹概率
+            if (joy > 40) {
+                if (!isJoy40Triggered) {
+                    isJoy40Triggered = true;
+                }
+                redChance = 0.2;      // 红色：20%
+                greenChance = 0.7;    // 绿色：70%（更容易收集）
+                grayChance = 0.1;     // 灰色：10%
+                spawnRate = 11;
+            }
+
+            // 18秒后持续高概率生成绿色言弹
+            if (is18SecondsTriggered) {
+                redChance = 0.15;     // 红色：15%
+                greenChance = 0.8;    // 绿色：80%
+                grayChance = 0.05;    // 灰色：5%
+                spawnRate = 15;
+            }
+
+            // 随机生成言弹
+            if (Math.random() < spawnRate / 60) {
+                let rand = Math.random();
+                let type;
+
+                if (rand < redChance) {
+                    type = 'red';
+                } else if (rand < redChance + greenChance) {
+                    type = 'green';
+                } else {
+                    type = 'gray';
+                }
+
+                bullets.push(new Bullet(type));
+            }
+        }
+
+        // 游戏动画循环（帧率控制）
+        function animate(timestamp) {
+            if (!gameRunning) return;
+
+            // 控制帧率（约60fps）
+            const delta = timestamp - lastFrameTime;
+            if (delta < 16) {
+                requestAnimationFrame(animate);
+                return;
+            }
+            lastFrameTime = timestamp;
+
+            // 清空画布
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+            // 生成新言弹
+            spawnBullets();
+
+            // 更新和绘制所有言弹
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const bullet = bullets[i];
+                bullet.draw();
+                if (bullet.update()) {
+                    bullets.splice(i, 1);
+                }
+            }
+
+            // 绘制自定义光标
+            ctx.beginPath();
+            ctx.arc(mouseX, mouseY, 15, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255, 140, 0, 0.9)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(mouseX, mouseY, 18, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255, 140, 0, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            requestAnimationFrame(animate);
+        }
+
+        // 确认游戏胜利并跳转到指定网页
+        function confirmGameWin() {
+            // 隐藏弹窗
+            gameWinModal.style.display = 'none';
+            // 跳转到目标网址
+            window.location.href = TARGET_URL;
+        }
+
+        // 页面加载完成后仅显示开始弹窗，不自动初始化游戏
+        window.onload = function() {
+            // 仅初始化画布大小，不启动游戏循环
+            resizeCanvas();
+            // 绑定鼠标移动事件（即使游戏未开始也能捕获鼠标位置）
+            canvas.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+        };
+    </script>
+</body>
+</html>
