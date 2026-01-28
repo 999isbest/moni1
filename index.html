@@ -73,7 +73,6 @@
             box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
             backdrop-filter: blur(10px);
             transition: transform 0.1s ease;
-            pointer-events: none; /* 新增：阻止UI元素拦截触摸事件 */
         }
 
         /* 欢笑值进度 */
@@ -118,7 +117,6 @@
             z-index: 101;
             text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
             transition: transform 0.1s ease;
-            pointer-events: none; /* 新增：阻止UI元素拦截触摸事件 */
         }
 
         /* 游戏画布（强制占满屏幕，移动端去除多余边距） */
@@ -245,7 +243,6 @@
             text-shadow: 0 0 3px #fff;
             width: 90%; /* 移动端百分比宽度 */
             max-width: 500px;
-            pointer-events: none; /* 新增：阻止UI元素拦截触摸事件 */
         }
 
         /* 评论卡片样式（移动端适配宽度和高度） */
@@ -269,7 +266,6 @@
             border: 2px solid #ffdd99;
             backdrop-filter: blur(10px);
             transition: all 0.2s ease;
-            pointer-events: none; /* 新增：阻止UI元素拦截触摸事件 */
         }
 
         /* 评论头像（移动端缩小） */
@@ -346,7 +342,6 @@
             z-index: 90; /* 低于其他UI，高于画布 */
             display: none; /* 初始隐藏 */
             touch-action: none;
-            transition: transform 0.05s ease; /* 新增：优化拖动顺滑度 */
         }
     </style>
 </head>
@@ -359,7 +354,7 @@
             收集绿色暖心言弹<br>
             躲避红色负面言弹<br>
             欢笑值满100即模拟成功<br>
-            移动端：拖动小球控制移动
+            移动端：点击页面任意处，控制小球移动
         </p>
         <button onclick="startGame()">开始模拟</button>
     </div>
@@ -502,14 +497,8 @@
         // 更新移动端控制小球位置
         function updateControlBallPosition() {
             if (!isTouchDevice) return;
-            // 新增：限制小球在屏幕内，防止拖出可视区域
-            const ballHalfWidth = controlBall.offsetWidth / 2;
-            const ballHalfHeight = controlBall.offsetHeight / 2;
-            mouseX = Math.max(ballHalfWidth, Math.min(canvasWidth - ballHalfWidth, mouseX));
-            mouseY = Math.max(ballHalfHeight, Math.min(canvasHeight - ballHalfHeight, mouseY));
-            
-            controlBall.style.left = `${mouseX - ballHalfWidth}px`;
-            controlBall.style.top = `${mouseY - ballHalfHeight}px`;
+            controlBall.style.left = `${mouseX - controlBall.offsetWidth / 2}px`;
+            controlBall.style.top = `${mouseY - controlBall.offsetHeight / 2}px`;
         }
 
         // 获取分阶段随机评论
@@ -818,11 +807,13 @@
                     mouseY = e.clientY;
                 });
             } else {
-                // 移动端：触摸事件绑定到document，确保全屏可拖动（关键修改）
-                document.addEventListener('touchstart', handleTouchStart, { passive: false }); // 新增passive: false
-                document.addEventListener('touchmove', handleTouchMove, { passive: false }); // 新增passive: false
-                document.addEventListener('touchend', handleTouchEnd, { passive: false }); // 新增passive: false
+                // 移动端：触摸事件
+                canvas.addEventListener('touchstart', handleTouchStart);
+                canvas.addEventListener('touchmove', handleTouchMove);
+                canvas.addEventListener('touchend', handleTouchEnd);
             }
+
+            animate();
         }
 
         // 更新欢笑值显示
