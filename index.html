@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>网络表达模拟体验-创意表达</title>
     <style>
         * {
@@ -56,15 +56,15 @@
             100% { filter: brightness(1); }
         }
 
-        /* 欢笑值容器 - 居中上方（移动端适配宽度） */
+        /* 欢笑值容器 - 居中上方（平板/移动端适配） */
         .joy-container {
             position: fixed;
-            top: 20px; /* 移动端减少顶部间距 */
+            top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            width: 90%; /* 移动端使用百分比宽度，最大不超过600px */
+            width: 90%;
             max-width: 600px;
-            height: 35px; /* 移动端略微缩小高度 */
+            height: 35px;
             background-color: rgba(255, 255, 255, 0.8);
             border: 3px solid #ffcc00;
             border-radius: 20px;
@@ -105,31 +105,34 @@
             100% { transform: translateX(100%); }
         }
 
-        /* 欢笑值文字提示（移动端适配） */
+        /* 欢笑值文字提示（平板/移动端适配） */
         .joy-text {
             position: fixed;
-            top: 25px; /* 对应欢笑值容器间距 */
+            top: 25px;
             left: 50%;
             transform: translateX(-50%);
             color: #ff8c00;
-            font-size: 16px; /* 移动端缩小字体 */
+            font-size: 16px;
             font-weight: bold;
             z-index: 101;
             text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
             transition: transform 0.1s ease;
         }
 
-        /* 游戏画布（强制占满屏幕，移动端去除多余边距） */
+        /* 游戏画布（强制占满屏幕，平板适配旋转） */
         #gameCanvas {
             display: block;
             width: 100vw;
             height: 100vh;
             background-color: rgba(255, 255, 255, 0.1);
             transition: filter 0.2s ease, transform 0.1s ease;
-            touch-action: none; /* 禁止移动端触摸默认行为（如缩放、滚动） */
+            touch-action: none; /* 禁止所有触摸默认行为 */
+            -webkit-touch-callout: none; /* 禁止iOS长按菜单 */
+            -webkit-user-select: none; /* 禁止文本选择 */
+            user-select: none;
         }
 
-        /* 游戏胜利弹窗（移动端适配宽度和内边距） */
+        /* 游戏胜利弹窗（平板/移动端适配） */
         .game-win {
             position: fixed;
             top: 50%;
@@ -137,9 +140,9 @@
             transform: translate(-50%, -50%);
             background-color: rgba(255, 255, 255, 0.98);
             color: #ff8c00;
-            padding: 30px 20px; /* 移动端减少内边距 */
-            width: 90%; /* 移动端百分比宽度 */
-            max-width: 500px; /* 限制最大宽度 */
+            padding: 30px 20px;
+            width: 90%;
+            max-width: 500px;
             border-radius: 15px;
             text-align: center;
             z-index: 200;
@@ -149,7 +152,7 @@
             animation: fadeIn 0.5s ease forwards;
         }
 
-        /* 游戏开始弹窗（移动端适配） */
+        /* 游戏开始弹窗（平板/移动端适配） */
         .game-start {
             position: fixed;
             top: 50%;
@@ -157,12 +160,12 @@
             transform: translate(-50%, -50%);
             background-color: rgba(255, 255, 255, 0.98);
             color: #ff8c00;
-            padding: 30px 20px; /* 移动端减少内边距 */
-            width: 90%; /* 移动端百分比宽度 */
-            max-width: 500px; /* 限制最大宽度 */
+            padding: 30px 20px;
+            width: 90%;
+            max-width: 500px;
             border-radius: 15px;
             text-align: center;
-            z-index: 300; /* 层级高于其他元素 */
+            z-index: 300;
             border: 2px solid #ffcc00;
             box-shadow: 0 0 30px rgba(255, 204, 0, 0.5);
             animation: fadeIn 0.5s ease forwards;
@@ -176,13 +179,13 @@
         .game-start h2 {
             color: #ff8c00;
             margin-bottom: 10px;
-            font-size: 28px; /* 移动端缩小字体 */
+            font-size: 28px;
             text-shadow: 0 0 10px rgba(255, 140, 0, 0.5);
         }
 
         .game-start .sub-title {
             color: #ff6666;
-            font-size: 20px; /* 移动端缩小字体 */
+            font-size: 20px;
             margin-bottom: 20px;
             font-weight: bold;
         }
@@ -190,20 +193,20 @@
         .game-win h2, .game-start h3 {
             color: #ff8c00;
             margin-bottom: 20px;
-            font-size: 28px; /* 移动端缩小字体 */
+            font-size: 28px;
             text-shadow: 0 0 10px rgba(255, 140, 0, 0.5);
         }
 
         .game-win p, .game-start p {
-            font-size: 16px; /* 移动端缩小字体 */
+            font-size: 16px;
             margin-bottom: 25px;
             line-height: 1.8;
             color: #333;
         }
 
         .game-win button, .game-start button {
-            padding: 10px 30px; /* 移动端缩小按钮内边距 */
-            font-size: 18px; /* 移动端缩小按钮字体 */
+            padding: 10px 30px;
+            font-size: 18px;
             background: linear-gradient(90deg, #FFD700, #FFA500);
             color: white;
             border: none;
@@ -211,7 +214,8 @@
             cursor: pointer;
             transition: all 0.3s;
             box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
-            touch-action: manipulation; /* 按钮触摸优化，防止双击缩放 */
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent; /* 去除点击高亮 */
         }
 
         .game-win button:hover, .game-start button:hover {
@@ -225,42 +229,42 @@
             outline-offset: 2px;
         }
 
-        /* 游戏说明（移动端适配，调整位置和大小） */
+        /* 游戏说明（平板/移动端适配） */
         .instructions {
             position: fixed;
-            bottom: 120px; /* 对应评论卡片间距 */
+            bottom: 120px;
             left: 50%;
             transform: translateX(-50%);
             color: #ff8c00;
-            font-size: 12px; /* 移动端缩小字体 */
+            font-size: 12px;
             text-align: center;
             z-index: 100;
             background-color: rgba(255, 255, 255, 0.8);
-            padding: 8px 15px; /* 移动端缩小内边距 */
+            padding: 8px 15px;
             border-radius: 20px;
             backdrop-filter: blur(5px);
             transition: transform 0.1s ease;
             text-shadow: 0 0 3px #fff;
-            width: 90%; /* 移动端百分比宽度 */
+            width: 90%;
             max-width: 500px;
         }
 
-        /* 评论卡片样式（移动端适配宽度和高度） */
+        /* 评论卡片样式（平板/移动端适配） */
         .comment-card {
             position: fixed;
-            bottom: 15px; /* 移动端减少底部间距 */
+            bottom: 15px;
             left: 50%;
             transform: translateX(-50%);
-            width: 90%; /* 移动端百分比宽度 */
+            width: 90%;
             max-width: 550px;
-            height: auto; /* 移动端自动高度，适配内容 */
-            min-height: 90px; /* 限制最小高度 */
+            height: auto;
+            min-height: 90px;
             background-color: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
-            padding: 15px; /* 移动端减少内边距 */
+            padding: 15px;
             display: flex;
             align-items: center;
-            gap: 15px; /* 移动端减少间距 */
+            gap: 15px;
             box-shadow: 0 0 20px rgba(255, 204, 0, 0.2);
             z-index: 100;
             border: 2px solid #ffdd99;
@@ -268,20 +272,20 @@
             transition: all 0.2s ease;
         }
 
-        /* 评论头像（移动端缩小） */
+        /* 评论头像（平板/移动端适配） */
         .comment-avatar {
-            width: 60px; /* 移动端缩小头像 */
+            width: 60px;
             height: 60px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px; /* 移动端缩小字体 */
+            font-size: 24px;
             color: white;
             font-weight: bold;
             box-shadow: 0 0 15px rgba(255, 204, 0, 0.3);
             transition: all 0.3s ease;
-            flex-shrink: 0; /* 防止头像被压缩 */
+            flex-shrink: 0;
         }
 
         /* 头像脉冲动画 */
@@ -298,18 +302,18 @@
         }
 
         .comment-author {
-            font-size: 16px; /* 移动端缩小字体 */
+            font-size: 16px;
             font-weight: bold;
             margin-bottom: 8px;
             transition: color 0.3s ease;
         }
 
         .comment-text {
-            font-size: 15px; /* 移动端缩小字体 */
+            font-size: 15px;
             line-height: 1.5;
             color: #555;
             text-shadow: 0 1px 3px rgba(255, 255, 255, 0.5);
-            word-wrap: break-word; /* 移动端自动换行，防止文字溢出 */
+            word-wrap: break-word;
         }
 
         /* 闪烁效果类 */
@@ -330,18 +334,136 @@
             100% { opacity: 0; transform: scale(0); }
         }
 
-        /* 移动端控制小球（默认隐藏，游戏运行时显示） */
+        /* 控制小球（平板/移动端优化） */
         .control-ball {
             position: fixed;
-            width: 30px;
-            height: 30px;
+            width: 40px; /* 平板增大触控球 */
+            height: 40px;
             border-radius: 50%;
             background: linear-gradient(135deg, #FFD700, #FF8C00);
-            box-shadow: 0 0 15px rgba(255, 140, 0, 0.8);
-            pointer-events: none; /* 不阻挡触摸事件 */
-            z-index: 90; /* 低于其他UI，高于画布 */
-            display: none; /* 初始隐藏 */
+            box-shadow: 0 0 20px rgba(255, 140, 0, 0.8), inset 0 0 10px rgba(255,255,255,0.5);
+            pointer-events: none;
+            z-index: 90;
+            display: none;
             touch-action: none;
+            border: 2px solid rgba(255,255,255,0.8); /* 增加边框更醒目 */
+        }
+
+        /* 平板适配：竖屏自动旋转为横屏 */
+        @media only screen and (min-width: 768px) and (max-width: 1024px) {
+            /* 平板竖屏处理 */
+            @media (orientation: portrait) {
+                body, html {
+                    transform: rotate(90deg);
+                    transform-origin: center center;
+                    width: 100vh;
+                    height: 100vw;
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    margin: -50vw 0 0 -50vh;
+                    overflow: hidden;
+                }
+                #gameCanvas, .scan-lines, .digital-rain, .background, .blobs, .data-wave, .data-scan, .spotlight, .loading-overlay, .watermark {
+                    width: 100vh;
+                    height: 100vw;
+                }
+                .control-ball {
+                    width: 45px; /* 平板竖屏旋转后增大触控球 */
+                    height: 45px;
+                }
+            }
+            
+            /* 平板横屏专属样式 */
+            .control-ball {
+                width: 40px;
+                height: 40px;
+            }
+            .joy-container {
+                height: 40px;
+                top: 30px;
+            }
+            .joy-text {
+                font-size: 18px;
+                top: 32px;
+            }
+            .comment-card {
+                min-height: 100px;
+                padding: 20px;
+            }
+            .comment-avatar {
+                width: 70px;
+                height: 70px;
+                font-size: 28px;
+            }
+            .comment-author {
+                font-size: 18px;
+            }
+            .comment-text {
+                font-size: 16px;
+            }
+            .instructions {
+                font-size: 14px;
+                padding: 10px 20px;
+                bottom: 130px;
+            }
+        }
+
+        /* 手机端适配 */
+        @media (max-width: 767px) {
+            body, html {
+                transform: rotate(90deg);
+                width: 100vh;
+                height: 100vw;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                margin: -50vw 0 0 -50vh;
+            }
+            #gameCanvas {
+                width: 100vh;
+                height: 100vw;
+            }
+            .control-ball {
+                width: 35px;
+                height: 35px;
+            }
+            h1 {
+                letter-spacing: 15px;
+            }
+            .subtitle {
+                letter-spacing: 8px;
+                text-indent: 8px;
+                font-size: clamp(1rem, 2.5vw, 1.2rem);
+            }
+            .joy-container {
+                height: 35px;
+                top: 20px;
+            }
+            .joy-text {
+                font-size: 16px;
+                top: 25px;
+            }
+            .comment-card {
+                min-height: 90px;
+                padding: 15px;
+            }
+            .comment-avatar {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+            .comment-author {
+                font-size: 16px;
+            }
+            .comment-text {
+                font-size: 15px;
+            }
+            .instructions {
+                font-size: 12px;
+                padding: 8px 15px;
+                bottom: 120px;
+            }
         }
     </style>
 </head>
@@ -367,7 +489,7 @@
     <!-- 游戏画布 -->
     <canvas id="gameCanvas"></canvas>
 
-    <!-- 移动端控制小球 -->
+    <!-- 移动端/平板控制小球 -->
     <div class="control-ball" id="controlBall"></div>
 
     <!-- 游戏胜利弹窗 -->
@@ -434,7 +556,7 @@
         const instructions = document.getElementById('instructions');
         const commentCard = document.getElementById('commentCard');
         const body = document.body;
-        const controlBall = document.getElementById('controlBall'); // 移动端控制小球
+        const controlBall = document.getElementById('controlBall');
 
         // ========== 游戏参数 ==========
         let canvasWidth = window.innerWidth;
@@ -450,7 +572,16 @@
         let flashInterval = null;
         let lastFrameTime = 0; // 帧率控制
         let is18SecondsTriggered = false; // 标记18秒巨量绿弹是否已触发
-        let isTouchDevice = /Mobile|Android|iOS|iPad|iPhone|iPod|Windows Phone|BlackBerry/.test(navigator.userAgent); // 判断是否为移动设备
+        
+        // 设备检测优化：精准区分平板和手机
+        const userAgent = navigator.userAgent.toLowerCase();
+        const isTablet = /(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk|(puffin(?!.*(IP|AP|WP))))/.test(userAgent);
+        const isMobile = /mobile|android|iphone|ipod|blackberry|iemobile|opera mini/.test(userAgent) && !isTablet;
+        const isTouchDevice = isTablet || isMobile; // 平板/手机都视为触摸设备
+
+        // 触摸相关变量优化
+        let isTouching = false;
+        let touchId = -1; // 追踪当前触摸点ID，支持多点触摸但只响应第一个
 
         // 跳转目标网址（可自行修改）
         const TARGET_URL = "https://999isbest.github.io/moni2/";
@@ -478,10 +609,17 @@
         };
 
         // ========== 工具函数 ==========
-        // 调整画布大小
+        // 调整画布大小（适配平板旋转）
         function resizeCanvas() {
-            canvasWidth = window.innerWidth;
-            canvasHeight = window.innerHeight;
+            // 处理平板/手机旋转后的尺寸
+            if ((isTablet && window.innerHeight > window.innerWidth) || isMobile) {
+                canvasWidth = window.innerHeight;
+                canvasHeight = window.innerWidth;
+            } else {
+                canvasWidth = window.innerWidth;
+                canvasHeight = window.innerHeight;
+            }
+            
             canvas.width = canvasWidth;
             canvas.height = canvasHeight;
             
@@ -493,11 +631,22 @@
             }
         }
 
-        // 更新移动端控制小球位置
+        // 更新控制小球位置（适配平板旋转）
         function updateControlBallPosition() {
             if (!isTouchDevice) return;
-            controlBall.style.left = `${mouseX - controlBall.offsetWidth / 2}px`;
-            controlBall.style.top = `${mouseY - controlBall.offsetHeight / 2}px`;
+            
+            let displayX = mouseX;
+            let displayY = mouseY;
+            
+            // 处理旋转后的坐标转换
+            if ((isTablet && window.innerHeight > window.innerWidth) || isMobile) {
+                // 旋转90度后的坐标转换
+                displayX = mouseY;
+                displayY = canvasWidth - mouseX;
+            }
+            
+            controlBall.style.left = `${displayX - controlBall.offsetWidth / 2}px`;
+            controlBall.style.top = `${displayY - controlBall.offsetHeight / 2}px`;
         }
 
         // 获取分阶段随机评论
@@ -715,35 +864,72 @@
             body.style.boxShadow = 'inset 0 0 200px rgba(255, 204, 0, 0.8)';
         }
 
-        // ========== 触摸事件相关变量和方法 ==========
-        let isTouching = false; // 是否正在触摸屏幕
-
-        // 触摸开始事件
+        // ========== 触摸事件优化（适配平板） ==========
+        // 触摸开始事件（支持多点触摸，只响应第一个触摸点）
         function handleTouchStart(e) {
             if (!gameRunning) return;
-            isTouching = true;
-            // 获取第一个触摸点的坐标
-            const touch = e.touches[0];
-            mouseX = touch.clientX;
-            mouseY = touch.clientY;
-            updateControlBallPosition();
+            
+            // 只处理第一个触摸点
+            if (touchId === -1) {
+                const touch = e.touches[0];
+                touchId = touch.identifier;
+                isTouching = true;
+                
+                // 转换触摸坐标（适配旋转）
+                if ((isTablet && window.innerHeight > window.innerWidth) || isMobile) {
+                    // 旋转90度后的坐标转换
+                    mouseX = window.innerHeight - touch.clientY;
+                    mouseY = touch.clientX;
+                } else {
+                    mouseX = touch.clientX;
+                    mouseY = touch.clientY;
+                }
+                
+                updateControlBallPosition();
+            }
         }
 
-        // 触摸移动事件
+        // 触摸移动事件（精准跟踪，防止抖动）
         function handleTouchMove(e) {
-            if (!gameRunning || !isTouching) return;
-            e.preventDefault(); // 阻止页面滚动等默认行为
-            const touch = e.touches[0];
-            mouseX = touch.clientX;
-            mouseY = touch.clientY;
+            if (!gameRunning || touchId === -1) return;
+            
+            e.preventDefault(); // 阻止所有默认行为
+            e.stopPropagation();
+            
+            // 找到当前跟踪的触摸点
+            let touch = null;
+            for (let i = 0; i < e.touches.length; i++) {
+                if (e.touches[i].identifier === touchId) {
+                    touch = e.touches[i];
+                    break;
+                }
+            }
+            
+            if (!touch) return;
+            
+            // 转换触摸坐标（适配旋转）
+            if ((isTablet && window.innerHeight > window.innerWidth) || isMobile) {
+                // 旋转90度后的坐标转换
+                mouseX = window.innerHeight - touch.clientY;
+                mouseY = touch.clientX;
+            } else {
+                mouseX = touch.clientX;
+                mouseY = touch.clientY;
+            }
+            
             updateControlBallPosition();
         }
 
-        // 触摸结束事件
-        function handleTouchEnd() {
-            isTouching = false;
-            // 移动端触摸结束后，小球仍保留在最后位置（可选：也可重置到中央）
-            updateControlBallPosition();
+        // 触摸结束/取消事件
+        function handleTouchEnd(e) {
+            // 检查是否是当前跟踪的触摸点
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === touchId) {
+                    touchId = -1;
+                    isTouching = false;
+                    break;
+                }
+            }
         }
 
         // ========== 游戏核心逻辑 ==========
@@ -767,14 +953,27 @@
             is18SecondsTriggered = false; // 重置18秒触发标记
             lastFrameTime = 0;
             isTouching = false;
+            touchId = -1; // 重置触摸ID
 
-            // 电脑端隐藏鼠标，移动端显示控制小球
+            // 设备适配：平板/手机显示控制小球，电脑端隐藏鼠标
             if (isTouchDevice) {
-                body.classList.remove('game-running'); // 移动端无需隐藏鼠标
+                body.classList.remove('game-running');
                 controlBall.style.display = 'block'; // 显示控制小球
                 updateControlBallPosition();
+                
+                // 绑定触摸事件（添加到document确保全屏响应）
+                document.addEventListener('touchstart', handleTouchStart, { passive: false });
+                document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                document.addEventListener('touchend', handleTouchEnd);
+                document.addEventListener('touchcancel', handleTouchEnd);
             } else {
                 body.classList.add('game-running'); // 电脑端隐藏鼠标
+                // 绑定鼠标事件
+                canvas.addEventListener('mousemove', (e) => {
+                    if (!gameRunning) return;
+                    mouseX = e.clientX;
+                    mouseY = e.clientY;
+                });
             }
             body.classList.remove('game-ended');
 
@@ -796,22 +995,10 @@
             // 初始化默认评论
             updateCommentCard('gray', '等待互动...');
 
-            // 绑定事件
+            // 绑定窗口大小变化事件
             window.addEventListener('resize', resizeCanvas);
-            if (!isTouchDevice) {
-                // 电脑端：鼠标移动事件
-                canvas.addEventListener('mousemove', (e) => {
-                    if (!gameRunning) return;
-                    mouseX = e.clientX;
-                    mouseY = e.clientY;
-                });
-            } else {
-                // 移动端：触摸事件
-                canvas.addEventListener('touchstart', handleTouchStart);
-                canvas.addEventListener('touchmove', handleTouchMove);
-                canvas.addEventListener('touchend', handleTouchEnd);
-            }
 
+            // 启动游戏循环
             animate();
         }
 
@@ -853,9 +1040,14 @@
             // 游戏胜利逻辑（欢笑值达到100）
             if (joy >= 100 && gameRunning) {
                 gameRunning = false;
-                // 游戏胜利后，移动端隐藏控制小球，电脑端显示鼠标
+                // 游戏胜利后，显示鼠标/隐藏控制小球
                 if (isTouchDevice) {
                     controlBall.style.display = 'none';
+                    // 移除触摸事件监听
+                    document.removeEventListener('touchstart', handleTouchStart);
+                    document.removeEventListener('touchmove', handleTouchMove);
+                    document.removeEventListener('touchend', handleTouchEnd);
+                    document.removeEventListener('touchcancel', handleTouchEnd);
                 } else {
                     body.classList.remove('game-running');
                 }
@@ -1125,7 +1317,7 @@
                 }
             }
 
-            // 绘制自定义光标/触摸标记（移动端隐藏，用控制小球替代）
+            // 绘制自定义光标（仅电脑端显示）
             if (!isTouchDevice) {
                 ctx.beginPath();
                 ctx.arc(mouseX, mouseY, 15, 0, Math.PI * 2);
@@ -1150,11 +1342,17 @@
             window.location.href = TARGET_URL;
         }
 
-        // 页面加载完成后仅显示开始弹窗，不自动初始化游戏
+        // 页面加载完成后初始化
         window.onload = function() {
-            // 仅初始化画布大小，不启动游戏循环
+            // 初始化画布大小
             resizeCanvas();
-            // 绑定鼠标移动事件（电脑端）
+            
+            // 监听屏幕旋转事件（适配平板横竖屏切换）
+            window.addEventListener('orientationchange', function() {
+                setTimeout(resizeCanvas, 100); // 延迟确保尺寸更新完成
+            });
+            
+            // 电脑端绑定鼠标移动事件（仅用于初始位置）
             if (!isTouchDevice) {
                 canvas.addEventListener('mousemove', (e) => {
                     mouseX = e.clientX;
@@ -1165,4 +1363,3 @@
     </script>
 </body>
 </html>
-
