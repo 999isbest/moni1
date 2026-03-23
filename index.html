@@ -450,7 +450,7 @@
         let flashInterval = null;
         let lastFrameTime = 0; // 帧率控制
         let is18SecondsTriggered = false; // 标记18秒巨量绿弹是否已触发
-        let isTouchDevice = /Mobile|Android|iOS|iPad|iPhone|iPod|Windows Phone|BlackBerry|Tablet/.test(navigator.userAgent); // 增强设备检测
+        let isTouchDevice = /Mobile|Android|iOS|iPad|iPhone|iPod|Windows Phone|BlackBerry/.test(navigator.userAgent); // 判断是否为移动设备
 
         // 跳转目标网址（可自行修改）
         const TARGET_URL = "https://999isbest.github.io/moni2/";
@@ -1165,3 +1165,4 @@
     </script>
 </body>
 </html>
+
